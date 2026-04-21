@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>감사일기 📔</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+  background: linear-gradient(135deg, #fff8f0 0%, #ffe5d0 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+}
+.card {
+  background: white;
+  border-radius: 24px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+}
+h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 6px;
+  color: #2d2d2d;
+}
+.subtitle {
+  text-align: center;
+  color: #888;
+  font-size: 0.88rem;
+  margin-bottom: 24px;
+}
+
+/* 진행 뱃지 */
+.progress-bar-wrap {
+  background: #f0f0f0;
+  border-radius: 100px;
+  height: 10px;
+  margin-bottom: 6px;
+}
+.progress-bar-fill {
+  height: 10px;
+  border-radius: 100px;
+  background: linear-gradient(90deg, #ff8c42, #ff4f7b);
+  transition: width 0.5s ease;
+}
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #aaa;
+  margin-bottom: 20px;
+}
+.round-badges {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.badge {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700;
+  color: #bbb;
+  background: #fafafa;
+  transition: all 0.3s;
+}
+.badge.done { background: #ff8c42; border-color: #ff8c42; color: white; }
+.badge.current { background: #fff; border-color: #ff8c42; color: #ff8c42; box-shadow: 0 0 0 3px #ffe0c8; }
+
+/* 섹션 구분 */
+.section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+/* 예시 박스 */
+.example-box {
+  background: #fff8f0;
+  border-left: 4px solid #ff8c42;
+  border-radius: 0 12px 12px 0;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+.example-box .ex-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ff8c42;
+  margin-bottom: 8px;
+}
+.ex-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start; }
+.ex-row:last-child { margin-bottom: 0; }
+.ex-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 100px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.ex-tag.bad { background: #ffe0e0; color: #e04040; }
+.ex-tag.good { background: #e0f5e0; color: #2a9d2a; }
+.ex-text { font-size: 0.84rem; color: #444; line-height: 1.5; }
+
+/* 입력 그룹 */
+.input-group { margin-bottom: 16px; }
+.input-group label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #444;
+  margin-bottom: 6px;
+}
+.input-group label span {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #aaa;
+  margin-left: 4px;
+}
+.input-group textarea {
+  width: 100%;
+  border: 2px solid #eee;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: border 0.2s;
+  color: #2d2d2d;
+}
+.input-group textarea:focus { outline: none; border-color: #ff8c42; }
+.input-group textarea::placeholder { color: #ccc; font-size: 0.85rem; }
+.input-group input[type="text"],
+.input-group input[type="password"] {
+  width: 100%;
+  border: 2px solid #eee;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border 0.2s;
+  color: #2d2d2d;
+}
+.input-group input:focus { outline: none; border-color: #ff8c42; }
+
+/* 버튼 */
+.btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+.btn-primary {
+  background: linear-gradient(90deg, #ff8c42, #ff4f7b);
+  color: white;
+  box-shadow: 0 4px 14px rgba(255,100,60,0.3);
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  background: #f5f5f5;
+  color: #666;
+  margin-top: 10px;
+}
+.btn-secondary:hover { background: #eee; }
+
+/* 안내 박스 */
+.info-box {
+  background: #f0f7ff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  font-size: 0.85rem;
+  color: #4a7cc7;
+  line-height: 1.6;
+}
+.info-box strong { display: block; margin-bottom: 4px; color: #2a5ba0; }
+
+/* 완료 화면 */
+.complete-wrap { text-align: center; padding: 20px 0; }
+.complete-emoji { font-size: 3.5rem; margin-bottom: 12px; }
+.complete-title { font-size: 1.3rem; font-weight: 800; color: #2d2d2d; margin-bottom: 8px; }
+.complete-sub { font-size: 0.9rem; color: #888; line-height: 1.6; }
+.complete-rounds { display: flex; gap: 8px; justify-content: center; margin: 20px 0; }
+
+/* 메시지 */
+.msg { font-size: 0.85rem; text-align: center; margin-top: 10px; min-height: 20px; }
+.msg.error { color: #e04040; }
+.msg.success { color: #2a9d2a; }
+
+/* 탭 메뉴 (로그인/비번재설정) */
+.tab-row { display: flex; gap: 0; margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 2px solid #eee; }
+.tab-btn { flex: 1; padding: 10px; border: none; background: #fafafa; font-size: 0.85rem; font-weight: 600; color: #aaa; cursor: pointer; transition: all 0.2s; }
+.tab-btn.active { background: #ff8c42; color: white; }
+
+.divider { border: none; border-top: 1px solid #f0f0f0; margin: 20px 0; }
+
+/* 숨김 */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- ===== 화면 1: 로그인 / 비번재설정 ===== -->
+  <div id="screen-login">
+    <h1>📔 감사일기</h1>
+    <p class="subtitle">도덕 수업 감사일기 쓰기 프로젝트</p>
+
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('login')">로그인</button>
+      <button class="tab-btn" onclick="switchTab('reset')">비밀번호 재설정</button>
+    </div>
+
+    <!-- 로그인 탭 -->
+    <div id="tab-login">
+      <div class="input-group">
+        <label>학번</label>
+        <input type="text" id="login-id" placeholder="학번 입력 (예: 2101)" maxlength="10" inputmode="numeric">
+      </div>
+      <div class="input-group">
+        <label>비밀번호 <span>숫자 4자리</span></label>
+        <input type="password" id="login-pw" placeholder="****" maxlength="4" inputmode="numeric">
+      </div>
+      <p class="msg error" id="login-msg"></p>
+      <button class="btn btn-primary" onclick="doLogin()">로그인 →</button>
+    </div>
+
+    <!-- 비번재설정 탭 -->
+    <div id="tab-reset" class="hidden">
+      <div class="info-box">
+        <strong>🔑 비밀번호를 잊어버렸나요?</strong>
+        학번과 이름으로 본인 확인 후 새 비밀번호를 설정할 수 있어요.
+      </div>
+      <div class="input-group">
+        <label>학번</label>
+        <input type="text" id="reset-id" placeholder="학번 입력" maxlength="10" inputmode="numeric">
+      </div>
+      <div class="input-group">
+        <label>이름</label>
+        <input type="text" id="reset-name" placeholder="본인 이름 입력">
+      </div>
+      <div class="input-group">
+        <label>새 비밀번호 <span>숫자 4자리</span></label>
+        <input type="password" id="reset-pw" placeholder="****" maxlength="4" inputmode="numeric">
+      </div>
+      <div class="input-group">
+        <label>새 비밀번호 확인</label>
+        <input type="password" id="reset-pw2" placeholder="****" maxlength="4" inputmode="numeric">
+      </div>
+      <p class="msg error" id="reset-msg"></p>
+      <button class="btn btn-primary" onclick="doReset()">비밀번호 변경 →</button>
+    </div>
+  </div>
+
+  <!-- ===== 화면 1-B: 첫 방문 (비번 설정) ===== -->
+  <div id="screen-setpw" class="hidden">
+    <h1>📔 감사일기</h1>
+    <p class="subtitle">처음 오셨군요! 비밀번호를 설정해주세요 😊</p>
+    <div class="info-box">
+      <strong>👋 안녕하세요, <span id="setpw-name"></span>님!</strong>
+      앞으로 로그인할 때 사용할 숫자 4자리 비밀번호를 만들어요.
+    </div>
+    <div class="input-group">
+      <label>새 비밀번호 <span>숫자 4자리</span></label>
+      <input type="password" id="setpw-pw" placeholder="****" maxlength="4" inputmode="numeric">
+    </div>
+    <div class="input-group">
+      <label>비밀번호 확인</label>
+      <input type="password" id="setpw-pw2" placeholder="****" maxlength="4" inputmode="numeric">
+    </div>
+    <p class="msg error" id="setpw-msg"></p>
+    <button class="btn btn-primary" onclick="doSetPw()">설정 완료 →</button>
+  </div>
+
+  <!-- ===== 화면 2: 가이드 ===== -->
+  <div id="screen-guide" class="hidden">
+    <h1>📔 감사일기란?</h1>
+    <p class="subtitle">쓰기 전에 딱 1분만 읽어봐요!</p>
+
+    <div class="example-box" style="margin-bottom:14px;">
+      <div class="ex-title">❌ 이런 감사는 별로예요</div>
+      <div class="ex-row">
+        <span class="ex-tag bad">나쁜 예</span>
+        <span class="ex-text">대한민국에 태어나서 다행이다</span>
+      </div>
+      <div class="ex-row">
+        <span class="ex-tag bad">나쁜 예</span>
+        <span class="ex-text">눈이 두 개라 다행이다</span>
+      </div>
+      <div class="ex-row">
+        <span class="ex-tag bad">나쁜 예</span>
+        <span class="ex-text">오늘 밥 먹어서 감사하다</span>
+      </div>
+    </div>
+    <div class="example-box" style="border-color:#2a9d2a; background:#f2fbf2; margin-bottom:20px;">
+      <div class="ex-title" style="color:#2a9d2a;">✅ 이런 감사를 써봐요</div>
+      <div class="ex-row">
+        <span class="ex-tag good">좋은 예</span>
+        <span class="ex-text">오늘 아침에 엄마가 좋아하는 반찬 챙겨줬는데 바빠도 챙겨줘서 고마웠다</span>
+      </div>
+      <div class="ex-row">
+        <span class="ex-tag good">좋은 예</span>
+        <span class="ex-text">수학 시험 망쳤는데 친구가 "다음엔 잘 할 거야" 해줘서 기분이 풀렸다</span>
+      </div>
+      <div class="ex-row">
+        <span class="ex-tag good">좋은 예</span>
+        <span class="ex-text">버스 놓칠 뻔했는데 기사님이 기다려줬다. 덕분에 지각 안 했다</span>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>💡 감사일기 쓰는 법</strong>
+      막연한 감사 말고, <b>오늘 실제로 있었던 일</b>을 떠올려봐요.<br>
+      "누가" "무엇을 해줬는지", 또는 "어떤 상황이 좋았는지" 구체적으로 쓸수록 좋아요!
+    </div>
+
+    <button class="btn btn-primary" onclick="showWrite()">이제 써볼게요! ✏️</button>
+  </div>
+
+  <!-- ===== 화면 3: 작성 ===== -->
+  <div id="screen-write" class="hidden">
+    <h1>📔 감사일기</h1>
+    <p class="subtitle" id="write-subtitle"></p>
+
+    <!-- 진행 현황 -->
+    <div class="round-badges" id="round-badges"></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-label">
+      <span id="progress-left"></span>
+      <span id="progress-right"></span>
+    </div>
+
+    <hr class="divider">
+
+    <div class="input-group">
+      <label>🏠 가정에서 감사한 일 <span>가족, 집에서 있었던 일</span></label>
+      <textarea id="entry-home" placeholder="예) 오늘 아침에 엄마가 좋아하는 반찬 챙겨줘서 고마웠다..."></textarea>
+    </div>
+    <div class="input-group">
+      <label>🏫 학교에서 감사한 일 <span>친구, 선생님, 수업에서 있었던 일</span></label>
+      <textarea id="entry-school" placeholder="예) 쉬는 시간에 친구가 먼저 말 걸어줘서 기분이 좋았다..."></textarea>
+    </div>
+    <div class="input-group">
+      <label>✨ 자유롭게 감사한 일 <span>어디서든 OK!</span></label>
+      <textarea id="entry-free" placeholder="예) 버스 놓칠 뻔했는데 기사님이 기다려줘서 지각 안 했다..."></textarea>
+    </div>
+
+    <p class="msg error" id="write-msg"></p>
+    <button class="btn btn-primary" id="submit-btn" onclick="doSubmit()">제출하기 🚀</button>
+    <button class="btn btn-secondary" onclick="doLogout()">로그아웃</button>
+  </div>
+
+  <!-- ===== 화면 4: 완료 ===== -->
+  <div id="screen-done" class="hidden">
+    <div class="complete-wrap">
+      <div class="complete-emoji" id="done-emoji"></div>
+      <div class="complete-title" id="done-title"></div>
+      <div class="complete-sub" id="done-sub"></div>
+      <div class="complete-rounds" id="done-badges"></div>
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="showWrite()">← 돌아가기</button>
+      <button class="btn btn-secondary" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
+
+  <!-- ===== 화면 5: 전체 완료 ===== -->
+  <div id="screen-finish" class="hidden">
+    <div class="complete-wrap">
+      <div class="complete-emoji">🎉</div>
+      <div class="complete-title">4회차 모두 완료!</div>
+      <div class="complete-sub">
+        감사일기 프로젝트를 모두 마쳤어요.<br>
+        꾸준히 써줘서 정말 대단해요! 👏<br><br>
+        <b>수고했어요, <span id="finish-name"></span>님!</b>
+      </div>
+      <div class="complete-rounds">
+        <span class="badge done">1회</span>
+        <span class="badge done">2회</span>
+        <span class="badge done">3회</span>
+        <span class="badge done">4회</span>
+      </div>
+      <button class="btn btn-secondary" onclick="doLogout()" style="margin-top:16px;">로그아웃</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// =============================================
+// ⚙️ 설정: 여기만 바꾸면 돼요!
+// =============================================
+const GAS_URL = "https://script.google.com/macros/s/AKfycbx2pWxX86UbWyoZG17HCf4EgGFOWw6vN9AIJ8rf4CT8IyfKU7Mhq_Mw5BbUGS0leZTI/exec";
+// =============================================
+
+let currentUser = null; // { id, name, round }
+
+// ---------- 탭 전환 ----------
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='reset'));
+  });
+  document.getElementById('tab-login').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('tab-reset').classList.toggle('hidden', tab !== 'reset');
+}
+
+// ---------- 화면 전환 ----------
+function showOnly(id) {
+  ['screen-login','screen-setpw','screen-guide','screen-write','screen-done','screen-finish']
+    .forEach(s => document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+// ---------- 로그인 ----------
+async function doLogin() {
+  const id = document.getElementById('login-id').value.trim();
+  const pw = document.getElementById('login-pw').value.trim();
+  const msg = document.getElementById('login-msg');
+  msg.textContent = '';
+
+  if (!id || !pw) { msg.textContent = '학번과 비밀번호를 입력해주세요.'; return; }
+
+  msg.textContent = '확인 중...';
+  try {
+    const res = await gas('login', { id, pw });
+    if (res.ok) {
+      currentUser = { id, name: res.name, round: res.nextRound };
+      if (res.nextRound > 4) {
+        document.getElementById('finish-name').textContent = res.name;
+        showOnly('screen-finish');
+      } else if (res.nextRound === 1) {
+        showOnly('screen-guide');
+      } else {
+        showWrite();
+      }
+    } else if (res.status === 'no_pw') {
+      // 첫 방문 - 비번 설정 필요
+      currentUser = { id, name: res.name, round: 1 };
+      document.getElementById('setpw-name').textContent = res.name;
+      showOnly('screen-setpw');
+    } else {
+      msg.textContent = res.msg || '학번 또는 비밀번호가 틀렸어요.';
+    }
+  } catch(e) {
+    msg.textContent = '연결 오류. 잠시 후 다시 시도해주세요.';
+  }
+}
+
+// ---------- 첫 비번 설정 ----------
+async function doSetPw() {
+  const pw = document.getElementById('setpw-pw').value.trim();
+  const pw2 = document.getElementById('setpw-pw2').value.trim();
+  const msg = document.getElementById('setpw-msg');
+  if (!/^\d{4}$/.test(pw)) { msg.textContent = '숫자 4자리로 입력해주세요.'; return; }
+  if (pw !== pw2) { msg.textContent = '비밀번호가 일치하지 않아요.'; return; }
+  msg.textContent = '저장 중...';
+  try {
+    const res = await gas('setpw', { id: currentUser.id, pw });
+    if (res.ok) {
+      currentUser.round = 1;
+      showOnly('screen-guide');
+    } else {
+      msg.textContent = res.msg || '오류가 발생했어요.';
+    }
+  } catch(e) {
+    msg.textContent = '연결 오류.';
+  }
+}
+
+// ---------- 비번 재설정 ----------
+async function doReset() {
+  const id = document.getElementById('reset-id').value.trim();
+  const name = document.getElementById('reset-name').value.trim();
+  const pw = document.getElementById('reset-pw').value.trim();
+  const pw2 = document.getElementById('reset-pw2').value.trim();
+  const msg = document.getElementById('reset-msg');
+  if (!id || !name) { msg.textContent = '학번과 이름을 입력해주세요.'; return; }
+  if (!/^\d{4}$/.test(pw)) { msg.textContent = '새 비밀번호는 숫자 4자리로 입력해주세요.'; return; }
+  if (pw !== pw2) { msg.textContent = '비밀번호가 일치하지 않아요.'; return; }
+  msg.textContent = '확인 중...';
+  try {
+    const res = await gas('resetpw', { id, name, pw });
+    if (res.ok) {
+      msg.className = 'msg success';
+      msg.textContent = '✅ 비밀번호가 변경됐어요! 로그인해주세요.';
+      setTimeout(() => { msg.textContent=''; msg.className='msg error'; switchTab('login'); }, 2000);
+    } else {
+      msg.textContent = res.msg || '학번 또는 이름이 맞지 않아요.';
+    }
+  } catch(e) {
+    msg.textContent = '연결 오류.';
+  }
+}
+
+// ---------- 작성 화면 ----------
+function showWrite() {
+  const r = currentUser.round;
+  document.getElementById('write-subtitle').textContent =
+    `${currentUser.name}님 · ${r}회차 작성 중`;
+
+  // 뱃지
+  const badgesEl = document.getElementById('round-badges');
+  badgesEl.innerHTML = '';
+  for (let i = 1; i <= 4; i++) {
+    const b = document.createElement('div');
+    b.className = 'badge' + (i < r ? ' done' : i === r ? ' current' : '');
+    b.textContent = i + '회';
+    badgesEl.appendChild(b);
+  }
+
+  // 진행바
+  document.getElementById('progress-fill').style.width = ((r-1)/4*100) + '%';
+  document.getElementById('progress-left').textContent = `${r-1}회차 완료`;
+  document.getElementById('progress-right').textContent = `총 4회차`;
+
+  // 텍스트 초기화
+  ['entry-home','entry-school','entry-free'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('write-msg').textContent = '';
+
+  showOnly('screen-write');
+}
+
+// ---------- 제출 ----------
+async function doSubmit() {
+  const home = document.getElementById('entry-home').value.trim();
+  const school = document.getElementById('entry-school').value.trim();
+  const free = document.getElementById('entry-free').value.trim();
+  const msg = document.getElementById('write-msg');
+
+  if (!home || !school || !free) {
+    msg.textContent = '세 칸 모두 써줘야 해요! ✏️';
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '제출 중...';
+  msg.textContent = '';
+
+  try {
+    const res = await gas('submit', {
+      id: currentUser.id,
+      name: currentUser.name,
+      round: currentUser.round,
+      home, school, free,
+      timestamp: new Date().toLocaleString('ko-KR')
+    });
+
+    if (res.ok) {
+      // 완료 화면
+      const r = currentUser.round;
+      const emojis = ['🌱','🌿','🌳','🎉'];
+      const titles = ['1회차 완료! 잘했어요 👏','2회차 완료! 절반 왔어요 🌟','3회차 완료! 거의 다 왔어요 🔥','4회차 모두 완료! 🎉'];
+      const subs = [
+        `앞으로 3번 더 남았어요.\n다음 시간에 또 솔직하게 써봐요!`,
+        `2회차도 완료! 벌써 절반이에요.\n감사한 마음이 조금씩 느껴지나요? 😊`,
+        `딱 1번만 더 남았어요!\n마지막까지 힘내봐요 💪`,
+        `4회차 모두 마쳤어요!\n꾸준히 써줘서 정말 대단해요 🏆`
+      ];
+
+      if (r >= 4) {
+        currentUser.round = 5;
+        document.getElementById('finish-name').textContent = currentUser.name;
+        showOnly('screen-finish');
+      } else {
+        currentUser.round = r + 1;
+        document.getElementById('done-emoji').textContent = emojis[r-1];
+        document.getElementById('done-title').textContent = titles[r-1];
+        document.getElementById('done-sub').textContent = subs[r-1];
+
+        const db = document.getElementById('done-badges');
+        db.innerHTML = '';
+        for (let i = 1; i <= 4; i++) {
+          const b = document.createElement('div');
+          b.className = 'badge' + (i <= r ? ' done' : '');
+          b.textContent = i + '회';
+          db.appendChild(b);
+        }
+        showOnly('screen-done');
+      }
+    } else {
+      msg.textContent = res.msg || '제출 오류. 다시 시도해주세요.';
+    }
+  } catch(e) {
+    msg.textContent = '연결 오류. 잠시 후 다시 시도해주세요.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '제출하기 🚀';
+  }
+}
+
+// ---------- 로그아웃 ----------
+function doLogout() {
+  currentUser = null;
+  document.getElementById('login-id').value = '';
+  document.getElementById('login-pw').value = '';
+  document.getElementById('login-msg').textContent = '';
+  switchTab('login');
+  showOnly('screen-login');
+}
+
+// ---------- GAS 통신 ----------
+async function gas(action, data) {
+  const url = GAS_URL + '?action=' + action;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(data)
+  });
+  return res.json();
+}
+</script>
+</body>
+</html>
