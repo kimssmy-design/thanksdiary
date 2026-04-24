@@ -410,7 +410,7 @@ h1 {
 // =============================================
 // ⚙️ 설정: 여기만 바꾸면 돼요!
 // =============================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbx2pWxX86UbWyoZG17HCf4EgGFOWw6vN9AIJ8rf4CT8IyfKU7Mhq_Mw5BbUGS0leZTI/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxp-yr-KtL4VjtW6nTVVSHHvoniCyosnQUX9nBlVlqCyAclWaYFU7qiZY9aX_UkjkaA/exec";
 // =============================================
 
 let currentUser = null; // { id, name, round }
@@ -440,6 +440,8 @@ async function doLogin() {
 
   if (!id || !pw) { msg.textContent = '학번과 비밀번호를 입력해주세요.'; return; }
 
+  const loginBtn = document.querySelector('#tab-login .btn-primary');
+  loginBtn.disabled = true;
   msg.textContent = '확인 중...';
   try {
     const res = await gas('login', { id, pw });
@@ -463,10 +465,10 @@ async function doLogin() {
     }
   } catch(e) {
     msg.textContent = '연결 오류. 잠시 후 다시 시도해주세요.';
+  } finally {
+    loginBtn.disabled = false;
   }
 }
-
-// ---------- 첫 비번 설정 ----------
 async function doSetPw() {
   const pw = document.getElementById('setpw-pw').value.trim();
   const pw2 = document.getElementById('setpw-pw2').value.trim();
@@ -554,8 +556,8 @@ async function doSubmit() {
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  btn.textContent = '제출 중...';
-  msg.textContent = '';
+  btn.textContent = '제출 중... ⏳';
+  msg.textContent = '잠깐만요, 저장하고 있어요 🙏';
 
   try {
     const res = await gas('submit', {
@@ -619,15 +621,27 @@ function doLogout() {
   showOnly('screen-login');
 }
 
-// ---------- GAS 통신 ----------
-async function gas(action, data) {
+// ---------- GAS 통신 (자동 재시도 3회) ----------
+async function gas(action, data, retries = 3) {
   const url = GAS_URL + '?action=' + action;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(data)
-  });
-  return res.json();
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.json();
+
+    } catch(e) {
+      if (attempt === retries) throw e; // 3회 모두 실패 시 오류 던지기
+      // 재시도 전 대기: 1회 실패 → 1초, 2회 실패 → 2초
+      await new Promise(r => setTimeout(r, attempt * 1000));
+    }
+  }
 }
 </script>
 </body>
