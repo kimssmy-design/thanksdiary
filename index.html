@@ -410,10 +410,14 @@ h1 {
 // =============================================
 // ⚙️ 설정: 여기만 바꾸면 돼요!
 // =============================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxp-yr-KtL4VjtW6nTVVSHHvoniCyosnQUX9nBlVlqCyAclWaYFU7qiZY9aX_UkjkaA/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzynaGEP66V-AUG-BWWbSdh69JQkh1E4ZYG3o1wIHJJgpjXrESrhNpYAwvJSm7naDCF/exec";
 // =============================================
 
-let currentUser = null; // { id, name, round }
+// ---------- GAS 워밍업 ping (콜드 스타트 방지) ----------
+// 페이지 로드되자마자 GAS를 미리 깨워둠 → 로그인 버튼 누를 때 빠르게 응답
+(function warmupGAS() {
+  fetch(GAS_URL, { method: 'GET' }).catch(() => {}); // 실패해도 무시
+})();
 
 // ---------- 탭 전환 ----------
 function switchTab(tab) {
