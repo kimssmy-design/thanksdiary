@@ -216,6 +216,55 @@ h1 {
 
 /* 숨김 */
 .hidden { display: none !important; }
+
+/* ===== 로딩 애니메이션 ===== */
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.4); border-top-color: white;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+  vertical-align: middle; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.dots span { animation: blink 1.2s infinite; }
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%,80%,100% { opacity: 0.2; } 40% { opacity: 1; } }
+
+.progress-wrap { margin: 10px 0 4px; }
+.progress-track { background: #f0f0f0; border-radius: 100px; height: 8px; overflow: hidden; }
+.progress-fill {
+  height: 8px; border-radius: 100px;
+  background: linear-gradient(90deg, #ff8c42, #ff4f7b);
+  width: 0%; transition: width 0.5s ease;
+}
+.progress-label { font-size: 0.78rem; color: #aaa; text-align: center; margin-top: 6px; }
+
+.particle-wrap { position: relative; height: 36px; overflow: hidden; pointer-events: none; }
+.particle {
+  position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  animation: rise 0.9s ease-out forwards; opacity: 0;
+}
+@keyframes rise {
+  0%   { opacity: 1; transform: translateY(36px) scale(1); }
+  100% { opacity: 0; transform: translateY(-4px) scale(0.4); }
+}
+
+.check-circle {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, #ff8c42, #ff4f7b);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 10px;
+  transform: scale(0);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.check-circle.show { transform: scale(1); }
+.check-circle svg { width: 28px; height: 28px; }
+.check-anim-text {
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+.check-anim-text.show { opacity: 1; transform: translateY(0); }
 </style>
 </head>
 <body>
@@ -410,7 +459,7 @@ h1 {
 // =============================================
 // ⚙️ 설정: 여기만 바꾸면 돼요!
 // =============================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzynaGEP66V-AUG-BWWbSdh69JQkh1E4ZYG3o1wIHJJgpjXrESrhNpYAwvJSm7naDCF/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbx2pWxX86UbWyoZG17HCf4EgGFOWw6vN9AIJ8rf4CT8IyfKU7Mhq_Mw5BbUGS0leZTI/exec";
 // =============================================
 
 // ---------- GAS 워밍업 ping (콜드 스타트 방지) ----------
@@ -446,31 +495,44 @@ async function doLogin() {
 
   const loginBtn = document.querySelector('#tab-login .btn-primary');
   loginBtn.disabled = true;
-  msg.textContent = '확인 중...';
+  loginBtn.innerHTML = '<span class="spinner"></span>확인 중<span class="dots"><span>.</span><span>.</span><span>.</span></span>';
+  msg.style.color = '#aaa';
+  msg.textContent = '잠깐만요, 서버에 확인 중이에요 🙏';
+
   try {
     const res = await gas('login', { id, pw });
     if (res.ok) {
       currentUser = { id, name: res.name, round: res.nextRound };
-      if (res.nextRound > 4) {
-        document.getElementById('finish-name').textContent = res.name;
-        showOnly('screen-finish');
-      } else if (res.nextRound === 1) {
-        showOnly('screen-guide');
-      } else {
-        showWrite();
-      }
+      // 성공 시 잠깐 체크 표시 후 화면 전환
+      loginBtn.innerHTML = '✅ 완료!';
+      msg.style.color = '#2a9d2a';
+      msg.textContent = `${res.name}님, 반가워요 👋`;
+      setTimeout(() => {
+        if (res.nextRound > 4) {
+          document.getElementById('finish-name').textContent = res.name;
+          showOnly('screen-finish');
+        } else if (res.nextRound === 1) {
+          showOnly('screen-guide');
+        } else {
+          showWrite();
+        }
+      }, 800);
     } else if (res.status === 'no_pw') {
-      // 첫 방문 - 비번 설정 필요
       currentUser = { id, name: res.name, round: 1 };
       document.getElementById('setpw-name').textContent = res.name;
-      showOnly('screen-setpw');
+      loginBtn.innerHTML = '✅ 완료!';
+      setTimeout(() => showOnly('screen-setpw'), 600);
     } else {
+      msg.style.color = '#e04040';
       msg.textContent = res.msg || '학번 또는 비밀번호가 틀렸어요.';
+      loginBtn.disabled = false;
+      loginBtn.innerHTML = '로그인 →';
     }
   } catch(e) {
+    msg.style.color = '#e04040';
     msg.textContent = '연결 오류. 잠시 후 다시 시도해주세요.';
-  } finally {
     loginBtn.disabled = false;
+    loginBtn.innerHTML = '로그인 →';
   }
 }
 async function doSetPw() {
@@ -548,10 +610,10 @@ function showWrite() {
 
 // ---------- 제출 ----------
 async function doSubmit() {
-  const home = document.getElementById('entry-home').value.trim();
+  const home   = document.getElementById('entry-home').value.trim();
   const school = document.getElementById('entry-school').value.trim();
-  const free = document.getElementById('entry-free').value.trim();
-  const msg = document.getElementById('write-msg');
+  const free   = document.getElementById('entry-free').value.trim();
+  const msg    = document.getElementById('write-msg');
 
   if (!home || !school || !free) {
     msg.textContent = '세 칸 모두 써줘야 해요! ✏️';
@@ -560,8 +622,31 @@ async function doSubmit() {
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  btn.textContent = '제출 중... ⏳';
-  msg.textContent = '잠깐만요, 저장하고 있어요 🙏';
+  btn.innerHTML = '<span class="spinner"></span>제출 중 ⏳';
+  msg.textContent = '';
+
+  // 프로그레스 바 생성
+  const progWrap = document.createElement('div');
+  progWrap.className = 'progress-wrap';
+  progWrap.innerHTML = `
+    <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+    <div class="progress-label" id="prog-label">연결하는 중<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>`;
+  btn.parentNode.insertBefore(progWrap, btn);
+
+  // 프로그레스 단계적으로 진행
+  const steps = [
+    { w: '30%', t: '연결하는 중' },
+    { w: '65%', t: '저장하는 중' },
+    { w: '85%', t: '거의 다 됐어요' },
+  ];
+  let si = 0;
+  const tick = setInterval(() => {
+    if (si >= steps.length) { clearInterval(tick); return; }
+    document.getElementById('prog-fill').style.width = steps[si].w;
+    document.getElementById('prog-label').innerHTML =
+      steps[si].t + '<span class="dots"><span>.</span><span>.</span><span>.</span></span>';
+    si++;
+  }, 700);
 
   try {
     const res = await gas('submit', {
@@ -572,44 +657,75 @@ async function doSubmit() {
       timestamp: new Date().toLocaleString('ko-KR')
     });
 
+    clearInterval(tick);
+
     if (res.ok) {
-      // 완료 화면
-      const r = currentUser.round;
-      const emojis = ['🌱','🌿','🌳','🎉'];
-      const titles = ['1회차 완료! 잘했어요 👏','2회차 완료! 절반 왔어요 🌟','3회차 완료! 거의 다 왔어요 🔥','4회차 모두 완료! 🎉'];
-      const subs = [
-        `앞으로 3번 더 남았어요.\n다음 시간에 또 솔직하게 써봐요!`,
-        `2회차도 완료! 벌써 절반이에요.\n감사한 마음이 조금씩 느껴지나요? 😊`,
-        `딱 1번만 더 남았어요!\n마지막까지 힘내봐요 💪`,
-        `4회차 모두 마쳤어요!\n꾸준히 써줘서 정말 대단해요 🏆`
-      ];
+      // 프로그레스 100% 완료
+      document.getElementById('prog-fill').style.width = '100%';
+      document.getElementById('prog-label').textContent = '완료!';
+      btn.innerHTML = '✅ 제출 완료!';
 
-      if (r >= 4) {
-        currentUser.round = 5;
-        document.getElementById('finish-name').textContent = currentUser.name;
-        showOnly('screen-finish');
-      } else {
-        currentUser.round = r + 1;
-        document.getElementById('done-emoji').textContent = emojis[r-1];
-        document.getElementById('done-title').textContent = titles[r-1];
-        document.getElementById('done-sub').textContent = subs[r-1];
+      setTimeout(() => {
+        progWrap.remove();
+        const r = currentUser.round;
+        const emojis = ['🌱','🌿','🌳','🎉'];
+        const titles = ['1회차 완료! 잘했어요 👏','2회차 완료! 절반 왔어요 🌟','3회차 완료! 거의 다 왔어요 🔥','4회차 모두 완료! 🎉'];
+        const subs = [
+          `앞으로 3번 더 남았어요.\n다음 시간에 또 솔직하게 써봐요!`,
+          `2회차도 완료! 벌써 절반이에요.\n감사한 마음이 조금씩 느껴지나요? 😊`,
+          `딱 1번만 더 남았어요!\n마지막까지 힘내봐요 💪`,
+          `4회차 모두 마쳤어요!\n꾸준히 써줘서 정말 대단해요 🏆`
+        ];
 
-        const db = document.getElementById('done-badges');
-        db.innerHTML = '';
-        for (let i = 1; i <= 4; i++) {
-          const b = document.createElement('div');
-          b.className = 'badge' + (i <= r ? ' done' : '');
-          b.textContent = i + '회';
-          db.appendChild(b);
+        if (r >= 4) {
+          currentUser.round = 5;
+          document.getElementById('finish-name').textContent = currentUser.name;
+          showOnly('screen-finish');
+        } else {
+          currentUser.round = r + 1;
+          document.getElementById('done-emoji').textContent = emojis[r-1];
+          document.getElementById('done-title').textContent = titles[r-1];
+          document.getElementById('done-sub').textContent = subs[r-1];
+
+          // 파티클 효과
+          const doneWrap = document.querySelector('.complete-wrap');
+          const pw = document.createElement('div');
+          pw.className = 'particle-wrap';
+          doneWrap.prepend(pw);
+          const colors = ['#ff8c42','#ff4f7b','#ffd166','#06d6a0','#118ab2'];
+          for (let i = 0; i < 14; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.cssText = `left:${5 + Math.random()*90}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()*0.5}s;`;
+            pw.appendChild(p);
+          }
+          setTimeout(() => pw.remove(), 1200);
+
+          const db = document.getElementById('done-badges');
+          db.innerHTML = '';
+          for (let i = 1; i <= 4; i++) {
+            const b = document.createElement('div');
+            b.className = 'badge' + (i <= r ? ' done' : '');
+            b.textContent = i + '회';
+            db.appendChild(b);
+          }
+          showOnly('screen-done');
         }
-        showOnly('screen-done');
-      }
+
+        btn.disabled = false;
+        btn.textContent = '제출하기 🚀';
+      }, 500);
+
     } else {
+      progWrap.remove();
       msg.textContent = res.msg || '제출 오류. 다시 시도해주세요.';
+      btn.disabled = false;
+      btn.textContent = '제출하기 🚀';
     }
   } catch(e) {
+    clearInterval(tick);
+    progWrap.remove();
     msg.textContent = '연결 오류. 잠시 후 다시 시도해주세요.';
-  } finally {
     btn.disabled = false;
     btn.textContent = '제출하기 🚀';
   }
