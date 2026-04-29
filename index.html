@@ -459,7 +459,7 @@ h1 {
 // =============================================
 // ⚙️ 설정: 여기만 바꾸면 돼요!
 // =============================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycby4TwZArNQVqm1g4KnUvNNqG-5MUzhdnBS22aCYigAMuFv2W9QpUwJp555xcAFWzLDZ/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxh090pH3g1CMc0PTtQEdWzL4Vq9FmrZX8A8DyOMkrzapnjNf6b2_RCszUgzMQyfxtY/exec";
 // =============================================
 
 // ---------- GAS 워밍업 ping (콜드 스타트 방지) ----------
@@ -508,6 +508,9 @@ async function doLogin() {
       msg.style.color = '#2a9d2a';
       msg.textContent = `${res.name}님, 반가워요 👋`;
       setTimeout(() => {
+        // ✨ 메시지 팝업 표시 (감사/경고 메시지)
+        checkAndShowMessages();
+        
         if (res.nextRound > 4) {
           document.getElementById('finish-name').textContent = res.name;
           showOnly('screen-finish');
@@ -762,6 +765,205 @@ async function gas(action, data, retries = 3) {
       await new Promise(r => setTimeout(r, attempt * 1000));
     }
   }
+}
+
+// ---------- 메시지 팝업 (감사 + 경고) ----------
+async function checkAndShowMessages() {
+  if (!currentUser || !currentUser.id) return;
+
+  try {
+    // 감사 메시지 확인
+    const thanksRes = await gas('getThanksForStudent', { studentId: currentUser.id });
+    if (thanksRes.messages && thanksRes.messages.length > 0) {
+      showThanksPopup(thanksRes.messages);
+    }
+
+    // 경고 메시지 확인 (읽지 않은 것만)
+    const warningRes = await gas('getWarningsForStudent', { studentId: currentUser.id });
+    if (warningRes.messages && warningRes.messages.length > 0) {
+      // 가장 최신 미읽음 경고만 표시
+      const unread = warningRes.messages.filter(m => !m.read);
+      if (unread.length > 0) {
+        showWarningPopup(unread[0]);
+      }
+    }
+  } catch(e) {
+    console.error('메시지 확인 오류:', e);
+  }
+}
+
+function showThanksPopup(messages) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  `;
+
+  const popup = document.createElement('div');
+  popup.style.cssText = `
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 380px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    text-align: center;
+    animation: slideUp 0.4s ease-out;
+  `;
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  let html = '<div style="font-size: 3rem; margin-bottom: 12px;">💝</div>';
+  html += '<div style="font-size: 1.2rem; font-weight: 800; color: #ff8c42; margin-bottom: 12px;">받은 감사 메시지!</div>';
+  
+  messages.forEach((msg, idx) => {
+    html += `
+      <div style="
+        background: #fff8f0;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 8px;
+        border-left: 4px solid #ff8c42;
+        text-align: left;
+      ">
+        <div style="font-size: 0.85rem; color: #888; margin-bottom: 4px;">${msg.timestamp || ''}</div>
+        <div style="font-size: 0.95rem; color: #2d2d2d; line-height: 1.5;">${escapeHtml(msg.message)}</div>
+      </div>
+    `;
+  });
+
+  html += `
+    <button style="
+      width: 100%;
+      padding: 12px;
+      margin-top: 16px;
+      background: linear-gradient(90deg, #ff8c42, #ff4f7b);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    " onclick="this.closest('body').querySelector('[data-overlay=thanks]').remove()">
+      감사합니다 ❤️
+    </button>
+  `;
+
+  popup.innerHTML = html;
+  overlay.setAttribute('data-overlay', 'thanks');
+  overlay.appendChild(popup);
+  overlay.onclick = (e) => {
+    if (e.target === overlay) overlay.remove();
+  };
+  document.body.appendChild(overlay);
+}
+
+function showWarningPopup(message) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  `;
+
+  const popup = document.createElement('div');
+  popup.style.cssText = `
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 380px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    text-align: center;
+    animation: slideUp 0.4s ease-out;
+    border-top: 4px solid #e67e22;
+  `;
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  let html = '<div style="font-size: 3rem; margin-bottom: 12px;">⚠️</div>';
+  html += '<div style="font-size: 1.2rem; font-weight: 800; color: #e67e22; margin-bottom: 12px;">선생님으로부터 메시지</div>';
+  
+  html += `
+    <div style="
+      background: #fff5e6;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+      border-left: 4px solid #e67e22;
+      text-align: left;
+    ">
+      <div style="font-size: 0.85rem; color: #888; margin-bottom: 6px;">${message.timestamp || ''}</div>
+      <div style="font-size: 0.95rem; color: #2d2d2d; line-height: 1.5;">${escapeHtml(message.message)}</div>
+    </div>
+  `;
+
+  html += `
+    <button style="
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(90deg, #e67e22, #d84315);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    " onclick="confirmWarning(this)">
+      확인했습니다 ✓
+    </button>
+  `;
+
+  popup.innerHTML = html;
+  popup.setAttribute('data-warning-id', message.id || Date.now());
+  overlay.setAttribute('data-overlay', 'warning');
+  overlay.appendChild(popup);
+  document.body.appendChild(overlay);
+}
+
+async function confirmWarning(btn) {
+  const popup = btn.closest('[data-overlay="warning"]').querySelector('div');
+  const warningId = popup.parentElement.getAttribute('data-warning-id');
+  
+  // 읽음 표시
+  try {
+    await gas('markWarningAsRead', { 
+      studentId: currentUser.id,
+      warningId: warningId
+    });
+  } catch(e) {
+    console.error('경고 확인 표시 오류:', e);
+  }
+
+  btn.closest('[data-overlay="warning"]').remove();
+}
+
+// HTML 이스케이프 함수
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 </script>
 </body>
