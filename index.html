@@ -459,7 +459,7 @@ h1 {
 // =============================================
 // ⚙️ 설정: 여기만 바꾸면 돼요!
 // =============================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyK12BER8P0RCKq6Jw0XLAV59fiQ3Tq6OhNTAfwBmdvXxBe0U1Dafd6_RPNrhNhAsUF/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyIgR_x2_EB323hLX_PCQPhujOHURYkgGjUtipAeBzPofZRKd_Y9jcs3Q6WhAaNUH05/exec";
 // =============================================
 
 // ---------- GAS 워밍업 ping (콜드 스타트 방지) ----------
@@ -740,6 +740,12 @@ function doLogout() {
   document.getElementById('login-id').value = '';
   document.getElementById('login-pw').value = '';
   document.getElementById('login-msg').textContent = '';
+  // 로그인 버튼 초기화
+  const loginBtn = document.querySelector('#tab-login .btn-primary');
+  if (loginBtn) {
+    loginBtn.disabled = false;
+    loginBtn.innerHTML = '로그인 →';
+  }
   switchTab('login');
   showOnly('screen-login');
 }
