@@ -459,7 +459,7 @@ h1 {
 // =============================================
 // ⚙️ 설정: 여기만 바꾸면 돼요!
 // =============================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyIgR_x2_EB323hLX_PCQPhujOHURYkgGjUtipAeBzPofZRKd_Y9jcs3Q6WhAaNUH05/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycby4TwZArNQVqm1g4KnUvNNqG-5MUzhdnBS22aCYigAMuFv2W9QpUwJp555xcAFWzLDZ/exec";
 // =============================================
 
 // ---------- GAS 워밍업 ping (콜드 스타트 방지) ----------
@@ -942,7 +942,7 @@ function showWarningPopup(message) {
   `;
 
   popup.innerHTML = html;
-  popup.setAttribute('data-warning-id', message.id || Date.now());
+  popup.setAttribute('data-warning-timestamp', message.timestamp || '');
   overlay.setAttribute('data-overlay', 'warning');
   overlay.appendChild(popup);
   document.body.appendChild(overlay);
@@ -950,13 +950,13 @@ function showWarningPopup(message) {
 
 async function confirmWarning(btn) {
   const popup = btn.closest('[data-overlay="warning"]').querySelector('div');
-  const warningId = popup.parentElement.getAttribute('data-warning-id');
+  const warningTimestamp = popup.parentElement.getAttribute('data-warning-timestamp');
   
   // 읽음 표시
   try {
     await gas('markWarningAsRead', { 
       studentId: currentUser.id,
-      warningId: warningId
+      timestamp: warningTimestamp
     });
   } catch(e) {
     console.error('경고 확인 표시 오류:', e);
