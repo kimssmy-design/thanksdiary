@@ -971,20 +971,24 @@ function showWarningPopup(message) {
 }
 
 async function confirmWarning(btn) {
-  const popup = btn.closest('[data-overlay="warning"]').querySelector('div');
-  const warningTimestamp = popup.parentElement.getAttribute('data-warning-timestamp');
+  const overlay = btn.closest('[data-overlay="warning"]');
+  const popup = overlay.querySelector('[data-warning-timestamp]');
+  const warningTimestamp = popup.getAttribute('data-warning-timestamp');
+  
+  console.log('읽음 처리 요청:', { studentId: currentUser.id, timestamp: warningTimestamp });
   
   // 읽음 표시
   try {
-    await gas('markWarningAsRead', { 
+    const res = await gas('markWarningAsRead', { 
       studentId: currentUser.id,
       timestamp: warningTimestamp
     });
+    console.log('읽음 처리 응답:', res);
   } catch(e) {
     console.error('경고 확인 표시 오류:', e);
   }
 
-  btn.closest('[data-overlay="warning"]').remove();
+  overlay.remove();
 }
 
 // HTML 이스케이프 함수
